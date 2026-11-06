@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Registratore Raffreddamento Pacchi</title>
+  
+  <!-- Icone corrette per PWA Android/Apple -->
+  <link rel="icon" type="image/png" sizes="32x32" href="dashboard-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="dashboard-192.png">
+  <link rel="apple-touch-icon" href="dashboard-512.png">
+  
+  <!-- Collegamento pulito al Manifest (rimosso crossorigin problematico) -->
+  <link rel="manifest" href="manifest.json">
+  
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    iframe { width: 100%; height: 100%; border: none; display: block; }
+    #installBtn { position: fixed; bottom: 20px; right: 20px; background: #ea580c; color: white; border: none; padding: 14px 24px; border-radius: 50px; font-weight: bold; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; display: none; z-index: 9999; transition: transform 0.2s; }
+    #installBtn:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+
+  <!-- Bottone galleggiante di installazione -->
+  <button id="installBtn">📲 Installa App</button>
+
+  <!-- URL CAMBIATO DA /dev A /exec (Inserisci qui il link di produzione di Google) -->
+  <iframe src="https://script.google.com/a/macros/eurotranciatura.it/s/AKfycbzjSnLMKe6W-UqZosrNzMDQ4P5LJO9702Ugwx5xeSUakUN7jgbwoC9310lEbRqa1a1x/exec"></iframe>
+
+  <script>
+    // Registra il Service Worker indicando chiaramente lo scope della cartella attuale
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrato con successo', reg.scope))
+          .catch(err => console.error('Errore registrazione SW:', err));
+      });
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    // Cattura l'evento di installazione di Android/Chrome
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block'; // Mostra il tuo bottone personalizzato
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBtn.style.display = 'none';
+      console.log('PWA installata correttamente sul dispositivo');
+    });
+  </script>
+</body>
+</html>
